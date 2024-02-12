@@ -1,0 +1,3 @@
+-Iinclude
+-DDEBUG=1
+-DALSA=1
