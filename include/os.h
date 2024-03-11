@@ -25,12 +25,12 @@ static inline u64 read(i64 fd, void *buf, u64 count) {
   return (u64)syscall3(NR_READ, (void *)fd, buf, (void *)count);
 }
 
-static inline u64 write(const char *buf, u64 count) {
-  return (u64)syscall3(NR_WRITE, (void *)SYSOUT, (void *)buf, (void *)count);
+static inline i64 write(i64 fd, const char *buf, u64 count) {
+  return (i64)syscall3(NR_WRITE, (void *)fd, (void *)buf, (void *)count);
 }
 
 /* use only with strings that are static, no dynamic */
-#define print(str) write(str, sizeof(str) - 1)
+#define print(str) write(SYSOUT, str, sizeof(str) - 1)
 
 static inline i64 open(const char *pathname, i32 flags) {
   return (i64)syscall2(NR_OPEN, (void *)pathname, (void *)(i64)flags);

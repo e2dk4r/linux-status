@@ -273,7 +273,7 @@ loop:
 #endif
 
   OUTPUT_STR("\n");
-  write(outbuf, (u64)(output - outbuf));
+  write(SYSOUT, outbuf, (u64)(output - outbuf));
 
   /* sleep 1 seconds */
   nanosleep(

@@ -80,7 +80,7 @@ static inline struct string u64tostr(u64 value, char *buf, u64 size) {
 
 static inline void print_u64(u64 value, char *buf, u64 size) {
   struct string str = u64tostr(value, buf, size);
-  write(str.buf, str.len);
+  write(SYSOUT, str.buf, str.len);
 }
 
 /* gb to kb */
