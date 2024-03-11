@@ -1,5 +1,6 @@
 # configure
-DEBUG      := 1
+DEBUG      := 0
+RELEASE    := $(shell test $(DEBUG) = 0 && echo 1 || echo 0)
 PIPEWIRE   := 0
 PULSEAUDIO := 0
 ALSA       := 0
@@ -40,6 +41,9 @@ LDFLAGS += -Wl,--as-needed
 # debug flags
 CFLAGS_$(DEBUG) += -g -O0
 CFLAGS += -DDEBUG=$(DEBUG)
+
+# release flags
+CFLAGS_$(RELEASE) += -O3
 
 # pipewire flags
 CFLAGS += -DPIPEWIRE=$(PIPEWIRE)
@@ -85,7 +89,7 @@ dirs:
 > @test -d $(OBJ_DIR) || $(MKDIR) $(OBJ_DIR)
 
 $(BINARY): $(OBJECTS) $(ASM_OBJECTS)
-> $(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
+> $(CC) -static $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 
 strip: $(BINARY)
 > $(STRIP) $(BINARY)
