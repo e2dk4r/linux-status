@@ -21,8 +21,8 @@ extern void *syscall5(u64 number, void *arg1, void *arg2, void *arg3,
                       void *arg4, void *arg5);
 
 /* used syscalls in status */
-static inline u64 read(i64 fd, void *buf, u64 count) {
-  return (u64)syscall3(NR_READ, (void *)fd, buf, (void *)count);
+static inline i64 read(i64 fd, void *buf, u64 count) {
+  return (i64)syscall3(NR_READ, (void *)fd, buf, (void *)count);
 }
 
 static inline i64 write(i64 fd, const char *buf, u64 count) {
