@@ -80,7 +80,7 @@ static inline struct string u64tostr(u64 value, char *buf, u64 size) {
 
 static inline void print_u64(u64 value, char *buf, u64 size) {
   struct string str = u64tostr(value, buf, size);
-  write(SYSOUT, str.buf, str.len);
+  write(STDOUT_FILENO, str.buf, str.len);
 }
 
 /* gb to kb */
@@ -186,7 +186,8 @@ static inline i8 memcmp(void *left, void *right, u64 sz) {
   return 0;
 }
 
-static inline char *strstrn(char *str, u64 str_sz, char *substring, u64 substring_sz) {
+static inline char *strstrn(char *str, u64 str_sz, char *substring,
+                            u64 substring_sz) {
   assert(str != 0);
   assert(str_sz > 0);
   assert(substring != 0);
@@ -200,7 +201,7 @@ static inline char *strstrn(char *str, u64 str_sz, char *substring, u64 substrin
 
     pstr++;
     if (pstr == pstr_max)
-        break;
+      break;
   }
 
   return (char *)-1;

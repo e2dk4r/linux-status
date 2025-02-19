@@ -12,6 +12,41 @@ static char outbuf[STATUS_OUTPUT_BUFSZ];
 int main(int argc, char *argv[]) {
   char *output;
 
+  i64 fd_loadavg = open("/proc/loadavg", O_RDONLY);
+  if (fd_loadavg < 0) {
+    return 1;
+  }
+
+  i64 fd_cpu_temp = open("/sys/class/hwmon/hwmon4/temp2_input", O_RDONLY);
+  if (fd_cpu_temp < 0) {
+    return 2;
+  }
+
+  i64 fd_gpu_percent =
+      open("/sys/class/drm/card0/device/gpu_busy_percent", O_RDONLY);
+  if (fd_gpu_percent < 0) {
+    return 3;
+  }
+
+  i64 fd_gpu_temp = open("/sys/class/hwmon/hwmon0/temp2_input", O_RDONLY);
+  if (fd_gpu_temp < 0) {
+    return 4;
+  }
+
+  i64 fd_meminfo = open("/proc/meminfo", O_RDONLY);
+  if (fd_meminfo < 0) {
+    return 5;
+  }
+
+  i64 fd_wlan0_rx = open("/sys/class/net/wlan0/statistics/rx_bytes", O_RDONLY);
+  if (fd_wlan0_rx < 0) {
+    return 5;
+  }
+  i64 fd_wlan0_tx = open("/sys/class/net/wlan0/statistics/tx_bytes", O_RDONLY);
+  if (fd_wlan0_tx < 0) {
+    return 5;
+  }
+
 loop:
   output = outbuf;
 #define OUTPUT(msg, len)                                                       \
@@ -21,14 +56,17 @@ loop:
   }
 #define OUTPUT_STR(msg) OUTPUT(msg, sizeof(msg) - 1)
 
+  lseek(fd_loadavg, 0, SEEK_SET);
+  lseek(fd_cpu_temp, 0, SEEK_SET);
+  lseek(fd_gpu_percent, 0, SEEK_SET);
+  lseek(fd_gpu_temp, 0, SEEK_SET);
+  lseek(fd_meminfo, 0, SEEK_SET);
+  lseek(fd_wlan0_rx, 0, SEEK_SET);
+  lseek(fd_wlan0_tx, 0, SEEK_SET);
+
   /* loadavg */
   OUTPUT_STR("c: ");
   {
-    i64 fd_loadavg = open("/proc/loadavg", O_RDONLY);
-    if (fd_loadavg < 0) {
-      return 1;
-    }
-
     /* maxium bytes required for at least
      * number of digits(NR_CPUS) * 8 + 1
      * ex: NR_CPUS=32
@@ -44,22 +82,17 @@ loop:
     u64 len = (u64)(p - buf);
     OUTPUT(buf, len);
 
-    close(fd_loadavg);
+    // close(fd_loadavg);
   }
 
   /* cpu tempature */
   OUTPUT_STR(" ");
   {
-    i64 fd_temp = open("/sys/class/hwmon/hwmon4/temp2_input", O_RDONLY);
-    if (fd_temp < 0) {
-      return 2;
-    }
-
     /* values in C
      *   min 9000
      *   max 999000
      */
-    read(fd_temp, buf, 8);
+    read(fd_cpu_temp, buf, 8);
 
     char *p = buf;
     while (*p != '\n') {
@@ -68,18 +101,12 @@ loop:
     u64 len = (u64)((p - buf) - 3);
     OUTPUT(buf, len);
 
-    close(fd_temp);
+    // close(fd_cpu_temp);
   }
 
   /* gpu */
   OUTPUT_STR(" g: ");
   {
-    i64 fd_gpu_percent =
-        open("/sys/class/drm/card0/device/gpu_busy_percent", O_RDONLY);
-    if (fd_gpu_percent < 0) {
-      return 3;
-    }
-
     /* values in percent
      *   min 0
      *   max 100
@@ -93,22 +120,17 @@ loop:
     u64 len = (u64)(p - buf);
     OUTPUT(buf, len);
 
-    close(fd_gpu_percent);
+    // close(fd_gpu_percent);
   }
 
   /* gpu tempature */
   OUTPUT_STR(" ");
   {
-    i64 fd_temp = open("/sys/class/hwmon/hwmon0/temp2_input", O_RDONLY);
-    if (fd_temp < 0) {
-      return 4;
-    }
-
     /* values in C
      *   min 9000
      *   max 999000
      */
-    read(fd_temp, buf, 8);
+    read(fd_gpu_temp, buf, 8);
 
     char *p = buf;
     while (*p != '\n') {
@@ -117,17 +139,12 @@ loop:
     u64 len = (u64)((p - buf) - 3);
     OUTPUT(buf, len);
 
-    close(fd_temp);
+    // close(fd_gpu_temp);
   }
 
   /* memory */
   OUTPUT_STR(" m: ");
   {
-    i64 fd_meminfo = open("/proc/meminfo", O_RDONLY);
-    if (fd_meminfo < 0) {
-      return 5;
-    }
-
     u64 mem_total = 0;
     u64 mem_free = 0;
     u64 mem_buffers = 0;
@@ -179,7 +196,7 @@ loop:
     OUTPUT_STR(".");
     OUTPUT_U64(mem_total_mb);
 
-    close(fd_meminfo);
+    // close(fd_meminfo);
   }
 
   /* network */
@@ -190,20 +207,11 @@ loop:
     u64 rx_bytes_new = 0;
     u64 tx_bytes_new = 0;
 
-    i64 fd_rx = open("/sys/class/net/wlan0/statistics/rx_bytes", O_RDONLY);
-    if (fd_rx < 0) {
-      return 5;
-    }
-    i64 fd_tx = open("/sys/class/net/wlan0/statistics/tx_bytes", O_RDONLY);
-    if (fd_tx < 0) {
-      return 5;
-    }
-
     /* read current value */
-    read(fd_rx, buf, 16);
+    read(fd_wlan0_rx, buf, 16);
     strtou64(buf, sizeof(buf), &rx_bytes_new);
 
-    read(fd_tx, buf, 16);
+    read(fd_wlan0_tx, buf, 16);
     strtou64(buf, sizeof(buf), &tx_bytes_new);
 
     /* delta */
@@ -240,8 +248,8 @@ loop:
 
   cleanup_network:
     /* cleanup */
-    close(fd_rx);
-    close(fd_tx);
+    // close(fd_wlan0_rx);
+    // close(fd_wlan0_tx);
 
     /* swap */
     rx_bytes = rx_bytes_new;
@@ -273,7 +281,7 @@ loop:
 #endif
 
   OUTPUT_STR("\n");
-  write(SYSOUT, outbuf, (u64)(output - outbuf));
+  write(STDOUT_FILENO, outbuf, (u64)(output - outbuf));
 
   /* sleep 1 seconds */
   nanosleep(

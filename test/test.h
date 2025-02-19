@@ -15,13 +15,13 @@ static struct {
 
 void test_ok(char *msg, u64 len) {
   print("[x] ");
-  write(SYSOUT, msg, len);
+  write(STDOUT_FILENO, msg, len);
   print("\n");
   testinfo.count++;
 }
 void test_fail(char *msg, u64 len) {
   print("[ ] ");
-  write(SYSOUT, msg, len);
+  write(STDOUT_FILENO, msg, len);
   print("\n");
   testinfo.count++;
   testinfo.fail++;
