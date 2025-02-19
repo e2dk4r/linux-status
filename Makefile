@@ -33,7 +33,7 @@ NASM   := nasm -f elf64
 CC      = clang
 CFLAGS += -std=c99
 CFLAGS += -Werror -Wall -Wpedantic -Wconversion
-CFLAGS += -ffreestanding -nostdlib -nostartfiles
+CFLAGS += -ffreestanding -nostdlib
 CFLAGS += -fno-stack-protector
 CFLAGS += -Iinclude
 LDFLAGS += -Wl,--as-needed
